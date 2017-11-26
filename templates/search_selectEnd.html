@@ -1,0 +1,17 @@
+<ion-modal-view>
+    <ion-header-bar>
+        <h1 class="title">SelectEnd</h1>
+        <div class="buttons">
+            <button class="button button-clear" ng-click="closeSelectend()">Close</button>
+        </div>
+    </ion-header-bar>
+    <ion-content>
+        <ion-list >
+            <ion-item ng-repeat="playlistsend in playlistsend" ng-click="doSelectEnd(  {{playlistsend.id}}  )" >
+                {{playlistsend.id}}
+                {{playlistsend.name}}
+                <!--<img src="{{playlist.imgSrc}}">-->
+            </ion-item>
+        </ion-list>
+    </ion-content>
+</ion-modal-view>

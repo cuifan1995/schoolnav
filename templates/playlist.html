@@ -1,0 +1,29 @@
+<ion-view view-title="Playlist">
+  <ion-content>
+
+    <ion-list>
+      <ion-item >
+        <h1>景点详情</h1>
+      </ion-item>
+      <ion-item >
+        id:{{id}}
+      </ion-item>
+      <ion-item >
+        名称：{{playlist.name}}
+      </ion-item>
+      <ion-item >
+        图片：
+        <img src="{{playlist.imgSrc}}">
+      </ion-item>
+      <ion-item >
+        介绍：{{playlist.intro}}
+      </ion-item>
+      <ion-item >
+        imgSrc:{{playlist.imgSrc}}
+      </ion-item>
+      <ion-item >
+        <div style="width:300px;height:250px;border:1px solid gray" id="container1"></div>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-view>

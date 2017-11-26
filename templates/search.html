@@ -1,0 +1,11 @@
+<ion-view view-title="Search">
+  <ion-content>
+    <button class="button  button-full button-calm" ng-click="selectStrat()">请选择起点</button>
+    <button class="button  button-full button-calm" ng-click="selectEnd()">请选择终点</button>
+    <p>选择的起点是：{{start.id}}，{{start.name}}</p>
+    <p>选择的终点是：{{end.id}},{{end.name}}</p>
+    <p>最短路径：{{shortpath}}</p>
+    <p>最短路长：{{shortm}}</p>
+    <button class="button  button-full button-calm" ng-click="selectok()">选好了</button>
+  </ion-content>
+</ion-view>

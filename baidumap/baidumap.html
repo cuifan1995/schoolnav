@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html ng-app="ionicApp">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no,width=device-width">
+    <title>注册</title>
+    <link href="../lib/ionic/css/ionic.css" rel="stylesheet">
+    <script src="../lib/ionic/js/ionic.bundle.js"></script>
+    <style type="text/css" src="/css/style"></style>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/bmobSocketIo.js"></script>
+    <script src="../js/bmob.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=0KzDtnrAVfdyBds7BV55rfzZ"></script>
+    <style type="text/css">
+        body, html,#container {width: 600px;height: 400px;overflow: hidden;margin:0;font-family:"微软雅黑";}
+    </style>
+</head>
+<body>
+<!--顶部标题栏-->
+<ion-header-bar align-title="center" class="balanced-bg">
+    <h1 class="title">ion-header-bar</h1>
+</ion-header-bar>
+<!--中间内容显示-->
+
+<ion-content   ng-controller="firstcontroller" scroll="false">
+    <div id="container"></div>
+    <div id="dvresult1" style="font-size:13px;margin-top:10px;"></div>
+</ion-content>
+
+<!--底部菜单栏-->
+<ion-footer-bar align-title="left" class="calm-bg">
+    <h1 class="title">nihao</h1>
+</ion-footer-bar>
+
+<script>
+    angular.module("ionicApp",["ionic"])
+            .controller("firstcontroller",function($scope){
+                var mapPointA = new BMap.Point(119.55859,39.929333);
+                var mapPointB = new BMap.Point(119.55859,39.929333);
+
+                var alng=mapPointA.lng; //地理经度
+                var alat=mapPointA.lat; //地理纬度
+                var blng=mapPointB.lng;
+                var blat=mapPointB.lat;
+                var map = new BMap.Map("container"); //放到了布局div里
+                map.enableScrollWheelZoom();                  // 启用滚轮放大缩小。
+                map.enableKeyboard();                         // 启用键盘操作。
+                map.centerAndZoom(mapPointA, 17);  // 初始化地图,设置中心点坐标和地图级别
+                var menu = new BMap.ContextMenu(); //创建一个右键菜单实例。
+                var flagstart = false;//起始点标志
+                var flagend = false;//终点标志
+                var txtMenuItem = [         //右键菜单数组以及点击后的回调函数。json数组形式
+                    {
+                        text:'设置起点',
+                        callback:function(){flagstart=true;}
+                    },
+                    {
+                        text:'设置终点',
+                        callback:function(){flagend = true;}
+                    },
+                    {
+                        text:'路径查询',
+                        callback:function(){
+                            map.clearOverlays();//clearOverlays()  none  清除地图上所有覆盖物。
+                            var transit = new BMap.DrivingRoute(map,
+                                    {policy:BMAP_DRIVING_POLICY_LEAST_DISTANCE,//此处最少时间，还有最短路径，和避开高速
+                                        onSearchComplete: searchComplete,     //检索完后的回调函数，函数定义在下面
+                                        onPolylinesSet: function()//折线添加完成后的回调函数。
+                                        {
+                                            setTimeout(
+                                                    function(){alert("折线添加完毕")},//output
+                                                    "5000"
+                                            );//时间到了, 浏览器就会执行一个指定的 method 或 function
+                                        }
+                                    }
+                            );//两个参数第一个地点，第二个DrivingRouteOptions，此类表示DrivingRoute构造函数的可选参数。
+                            transit.search(//匿名累不累+_+
+                                    new BMap.Point(mapPointA.lng,mapPointA.lat),
+                                    new BMap.Point(mapPointB.lng,mapPointB.lat)
+                            );//查询两个点的最短路径。
+                        }
+                    }
+                ];//txtMenuItem
+                for(var i=0; i < txtMenuItem.length; i++){
+                    menu.addItem(new BMap.MenuItem(txtMenuItem[i].text,txtMenuItem[i].callback,100));//将右键数组里面的文字，回调函数 实例化3个MenuItem 在添加到menu中。
+                }
+                map.addContextMenu(menu);//添加右键菜单menu
+
+                /*search后马上调用，用于处理结果，主要是显示*/
+                var searchComplete = function (results){
+                    if (transit.getStatus() != BMAP_STATUS_SUCCESS){
+                        return ;
+                    }
+                    var outStr = [];
+                    //获取路径导航策略
+                    outStr.push("本次查询路径生成策略为："+results.policy+"(0为最短时间1位最短路径2为避免高速）");
+                    //获取方案总数
+                    outStr.push("本次查询方案总数为："+results.getNumPlans());
+                    outStr.push("的士费用："+results.taxiFare.day.totalFare + "元 ");
+                    //轮巡所有方案
+                    for (var i = 0; i < results.getNumPlans(); i ++){
+                        outStr.push("***********************************************")
+                        // 获取第i个方案
+                        var plan = results.getPlan(i);
+                        outStr.push("方案："+(i+1)+"耗时："+plan.getDuration(true)+"|路程："+plan.getDistance(true)+"|线路数："+plan.getNumRoutes());
+                        for(var j = 0; j < plan.getNumRoutes(); j ++){
+                            // 获取方案的驾车线路
+                            var route = plan.getRoute(j);
+                            // 获取每个关键步骤,并输出到页面
+                            for (var k = 0; k < route.getNumSteps(); k ++){
+                                var step = route.getStep(k);
+                                outStr.push((k + 1) + ". " + step.getDescription());
+                                outStr.push("目标点："+step.getPosition().lng+","+step.getPosition().lat);
+                                var marker = new BMap.Marker(step.getPosition());//做标记。。。传进去点对象，生成marker对象
+                                marker.setTitle(marker.getPosition().lng+","+marker.getPosition().lat);
+                                map.addOverlay(marker);//标记加入到图里
+                            }
+                            outStr.push("----------------------------------------------------")
+
+                        }
+                    }
+                    document.getElementById("dvresult1").innerHTML = outStr.join("<br/>");//显示信息。。
+                };//document.getElementById("container")
+                map.`1  R("click", function(e){
+                    alert("进入点击事件");
+                    if(flagstart == true)
+                    {  alng=e.point.lng;
+                        alat=e.point.lat;
+                        mapPointA.lng  = e.point.lng;
+                        mapPointA.lat = e.point.lat;
+                        flagstart = false;
+                        alert("行程起点变为："+mapPointA.lng + ", " + mapPointA.lat);
+                        map.addOverlay(new BMap.Marker(mapPointA));
+                    }
+                    if(flagend == true)
+                    {
+                        mapPointB.lng  = e.point.lng;
+                        mapPointB.lat = e.point.lat;
+                        flagend =false;
+                        alert("行程终点变为："+mapPointB.lng + ", " + mapPointB.lat);
+                        map.addOverlay(new BMap.Marker(mapPointB));
+                    }
+                });
+                var transit = new BMap.DrivingRoute(map,{policy:BMAP_DRIVING_POLICY_LEAST_TIME,
+                    onSearchComplete: searchComplete});
+                transit.search(mapPointA,mapPointB);
+
+
+            });//congroller结束
+</script>
+</body>
+</html>
